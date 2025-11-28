@@ -1,0 +1,177 @@
+[36m[1m════════════════════════════════════════════════════════════════[0m
+[36m[1m  AUTONOMOUS CODE DEV LOOP[0m
+[36m[1m════════════════════════════════════════════════════════════════[0m
+
+[1mTask:[0m Add keyboard event listener in QueueBattleView for Q key to trigger auto-attack
+[1mProject:[0m /home/geni/Documents/vale-village
+[1mMax iterations:[0m 5
+[1mCode verify:[0m 'keydown|KeyQ|key.*q' [2m(skipping vision)[0m
+
+[2mSkipping git checkpoint (--no-stash)[0m
+[33m► Iteration 1 / 5[0m
+
+[2mDetecting relevant files...[0m
+[2mFound: src/ui/components/QueueBattleView.tsx [0m
+[2mAsking AI for code changes...[0m
+Proposed edits:
+{"file": "src/ui/components/QueueBattleView.tsx", "search": "  const handleTargetSelect = (targetId: string) => {
+    if (!currentUnit || activePortraitIndex === null || !battle) return;
+
+    const ability = currentUnit.abilities.find(a => a.id === selectedAbilityId);
+    
+    // Resolve target list based on ability target type
+    let targetIds: string[] = [targetId];
+    const aliveEnemies = battle.enemies.filter((e) => !isUnitKO(e)).map((e) => e.id);
+    const aliveAllies = battle.playerTeam.units.filter((u) => !isUnitKO(u)).map((u) => u.id);
+
+    switch (ability?.targets) {
+      case 'all-enemies':
+        targetIds = aliveEnemies;
+        break;
+      case 'all-allies':
+        targetIds = aliveAllies;
+        break;
+      case 'self':
+        targetIds = [currentUnit.id];
+        break;
+      default:
+        targetIds = [targetId];
+    }
+
+    // Queue the action
+    const queued = queueUnitAction(activePortraitIndex, selectedAbilityId ?? null, targetIds, ability);
+    if (!queued) {
+      return;
+    }
+
+    // Crit counter progression for basic attacks
+    if (selectedAbilityId === null) {
+      const nextCount = (critCounters[currentUnit.id] ?? 0) + 1;
+      const threshold = critThresholds[currentUnit.id] ?? 10;
+      if (nextCount >= threshold) {
+        resetCritCounter(currentUnit.id);
+        triggerCritFlash(currentUnit.id);
+      } else {
+        incrementCritCounter(currentUnit.id);
+      }
+    }
+    
+    // Reset selection for next
+    setSelectedAbilityId(undefined);
+
+    // Auto-advance to next unit by SPEED
+    const order = getPlanningTurnOrder(battle);
+    const currentOrderIdx = order.indexOf(activePortraitIndex);
+    if (currentOrderIdx !== -1 && currentOrderIdx < order.length - 1) {
+      const nextIndex = order[currentOrderIdx + 1];
+      if (nextIndex !== undefined) {
+        setActivePortrait(nextIndex);
+      }
+    }
+  };
+
+  const handleExecute = () => {
+    if (isQueueComplete) executeQueuedRound();
+  };", "replace": "  const handleTargetSelect = (targetId: string, abilityIdOverride?: string | null) => {
+    if (!currentUnit || activePortraitIndex === null || !battle) return;
+
+    const abilityIdToUse = abilityIdOverride ?? selectedAbilityId;
+    const ability = abilityIdToUse ? currentUnit.abilities.find(a => a.id === abilityIdToUse) : undefined;
+    
+    // Resolve target list based on ability target type
+    let targetIds: string[] = [targetId];
+    const aliveEnemies = battle.enemies.filter((e) => !isUnitKO(e)).map((e) => e.id);
+    const aliveAllies = battle.playerTeam.units.filter((u) => !isUnitKO(u)).map((u) => u.id);
+
+    switch (ability?.targets) {
+      case 'all-enemies':
+        targetIds = aliveEnemies;
+        break;
+      case 'all-allies':
+        targetIds = aliveAllies;
+        break;
+      case 'self':
+        targetIds = [currentUnit.id];
+        break;
+      default:
+        targetIds = [targetId];
+    }
+
+    // Queue the action
+    const queued = queueUnitAction(activePortraitIndex, abilityIdToUse ?? null, targetIds, ability);
+    if (!queued) {
+      return;
+    }
+
+    // Crit counter progression for basic attacks
+    if (abilityIdToUse === null) {
+      const nextCount = (critCounters[currentUnit.id] ?? 0) + 1;
+      const threshold = critThresholds[currentUnit.id] ?? 10;
+      if (nextCount >= threshold) {
+        resetCritCounter(currentUnit.id);
+        triggerCritFlash(currentUnit.id);
+      } else {
+        incrementCritCounter(currentUnit.id);
+      }
+    }
+    
+    // Reset selection for next
+    setSelectedAbilityId(undefined);
+
+    // Auto-advance to next unit by SPEED
+    const order = getPlanningTurnOrder(battle);
+    const currentOrderIdx = order.indexOf(activePortraitIndex);
+    if (currentOrderIdx !== -1 && currentOrderIdx < order.length - 1) {
+      const nextIndex = order[currentOrderIdx + 1];
+      if (nextIndex !== undefined) {
+        setActivePortrait(nextIndex);
+      }
+    }
+  };
+
+  const handleAutoAttack = () => {
+    if (!battle || battle.phase !== 'planning') return;
+    if (!currentUnit || activePortraitIndex === null) return;
+    if (isUnitKO(currentUnit)) return;
+
+    const targets = getValidTargets(null, currentUnit, battle.playerTeam, battle.enemies);
+    if (!targets.length) return;
+
+    handleSelectAttack();
+    handleTargetSelect(targets[0].id, null);
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'q' && event.key !== 'Q') return;
+      if (event.repeat) return;
+      handleAutoAttack();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [handleAutoAttack]);
+
+  const handleExecute = () => {
+    if (isQueueComplete) executeQueuedRound();
+  };"}
+[33m⚠ Multiple matches (1279) in src/ui/components/QueueBattleView.tsx - applying to first[0m
+[2mEditing src/ui/components/QueueBattleView.tsx...[0m
+[32m✓ Changes detected:[0m
+ .claude/settings.local.json           |  3 ++-
+ src/ui/components/QueueBattleView.tsx | 34 ++++++++++++++++++++++++++++++----
+ 2 files changed, 32 insertions(+), 5 deletions(-)
+[32m✓ Code check: Found pattern 'keydown|KeyQ|key.*q'[0m
+
+[32m[1m════════════════════════════════════════════════════════════════[0m
+[32m[1m  ✓ TASK COMPLETE (iteration 1) - code verified[0m
+[32m[1m════════════════════════════════════════════════════════════════[0m
+
+Session log: /home/geni/Projects/ai-debate/visual-loop/runs/auto_20251127_202521
+
+[1mMetrics:[0m
+  Duration: 594s
+  Edits applied: 0
+  Edits failed: 0

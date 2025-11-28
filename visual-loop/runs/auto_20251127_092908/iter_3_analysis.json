@@ -1,0 +1,1 @@
+{"pass": false, "issues": "Version badge (v0.1.0) appears static with no visible golden glow or pulse animation.", "next_action": "Implement a subtle warm gold glow pulse on the version badge every 2-3 seconds and recheck."}

@@ -1,0 +1,1 @@
+{"pass": false, "issues": "No floating damage/healing numbers are visible above units; the screen shows only the title UI with no units or damage events to verify.", "next_action": "implement damage/heal number visuals and show them when units take damage or receive healing"}

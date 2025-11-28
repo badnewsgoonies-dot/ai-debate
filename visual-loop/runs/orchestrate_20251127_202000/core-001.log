@@ -1,0 +1,77 @@
+[36m[1m════════════════════════════════════════════════════════════════[0m
+[36m[1m  AUTONOMOUS CODE DEV LOOP[0m
+[36m[1m════════════════════════════════════════════════════════════════[0m
+
+[1mTask:[0m Add helper function selectLowHPTarget in AIService.ts that returns the unit with lowest HP percentage
+[1mProject:[0m /home/geni/Documents/vale-village
+[1mMax iterations:[0m 5
+[1mCode verify:[0m 'selectLowHPTarget|lowest.*hp|lowestHP' [2m(skipping vision)[0m
+
+[2mSkipping git checkpoint (--no-stash)[0m
+[33m► Iteration 1 / 5[0m
+
+[2mDetecting relevant files...[0m
+[2mFound: src/core/services/AIService.ts src/core/services/BattleService.ts [0m
+[2mAsking AI for code changes...[0m
+Proposed edits:
+{"file":"src/core/services/AIService.ts","search":"export interface AIDecision {
+  abilityId: string;
+  targetIds: readonly string[];
+}
+
+/**
+ * Score an ability for use by an enemy unit
+ * Higher score = better choice
+ */
+function scoreAbility(
+  ability: Ability,
+  caster: Unit,
+  state: BattleState
+","replace":"export interface AIDecision {
+  abilityId: string;
+  targetIds: readonly string[];
+}
+
+/**
+ * Selects the living unit with the lowest HP percentage.
+ * Returns null if no valid units remain.
+ */
+export function selectLowHPTarget(units: readonly Unit[]): Unit | null {
+  const livingUnits = units.filter(unit => !isUnitKO(unit));
+  if (livingUnits.length === 0) {
+    return null;
+  }
+
+  return livingUnits.reduce((lowest, unit) => {
+    const lowestHpPct = lowest.currentHp / calculateMaxHp(lowest);
+    const unitHpPct = unit.currentHp / calculateMaxHp(unit);
+    return unitHpPct < lowestHpPct ? unit : lowest;
+  }, livingUnits[0]!);
+}
+
+/**
+ * Score an ability for use by an enemy unit
+ * Higher score = better choice
+ */
+function scoreAbility(
+  ability: Ability,
+  caster: Unit,
+  state: BattleState
+"}
+[33m⚠ Multiple matches (383) in src/core/services/AIService.ts - applying to first[0m
+[2mEditing src/core/services/AIService.ts...[0m
+[32m✓ Changes detected:[0m
+ src/core/services/AIService.ts | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+[32m✓ Code check: Found pattern 'selectLowHPTarget|lowest.*hp|lowestHP'[0m
+
+[32m[1m════════════════════════════════════════════════════════════════[0m
+[32m[1m  ✓ TASK COMPLETE (iteration 1) - code verified[0m
+[32m[1m════════════════════════════════════════════════════════════════[0m
+
+Session log: /home/geni/Projects/ai-debate/visual-loop/runs/auto_20251127_202400
+
+[1mMetrics:[0m
+  Duration: 81s
+  Edits applied: 0
+  Edits failed: 0

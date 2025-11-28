@@ -1,0 +1,1 @@
+{"pass": false, "issues": "Cannot verify floating damage/healing numbers; screenshot only shows title screen with no units or damage events", "next_action": "Provide gameplay scenario showing units taking damage/healing with floating red/green numbers for validation"}

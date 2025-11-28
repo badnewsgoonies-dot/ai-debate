@@ -1,0 +1,51 @@
+[
+  {
+    "id": "title-001",
+    "task": "Add a subtle shimmer effect to the 'Press Start' text on title screen - gentle opacity pulse",
+    "stream": "visual",
+    "context_files": "TitleScreen.tsx,TitleScreen.css",
+    "verify_code": "@keyframes.*shimmer|opacity.*animation|pulse"
+  },
+  {
+    "id": "title-002",
+    "task": "Add a glowing border around the title text 'Vale Chronicles' using CSS box-shadow",
+    "stream": "visual",
+    "context_files": "TitleScreen.tsx,TitleScreen.css",
+    "verify_code": "box-shadow.*glow|text-shadow"
+  },
+  {
+    "id": "battle-001",
+    "task": "Add CSS class and keyframes for floating damage numbers - red color, float upward animation",
+    "stream": "visual",
+    "context_files": "battle-screen.css",
+    "verify_code": "damage-number|@keyframes.*float|float.*up"
+  },
+  {
+    "id": "battle-002",
+    "task": "Add CSS class for unit shake animation when taking damage - subtle horizontal shake",
+    "stream": "visual",
+    "context_files": "battle-screen.css",
+    "verify_code": "@keyframes.*shake|transform.*translateX"
+  },
+  {
+    "id": "battle-003",
+    "task": "Add CSS class for active unit highlight - glowing golden border",
+    "stream": "visual",
+    "context_files": "battle-screen.css",
+    "verify_code": "active.*unit|unit.*active|box-shadow.*gold"
+  },
+  {
+    "id": "core-001",
+    "task": "Add helper function selectLowHPTarget in AIService.ts that returns the unit with lowest HP percentage",
+    "stream": "core",
+    "context_files": "AIService.ts,BattleService.ts",
+    "verify_code": "selectLowHPTarget|lowest.*hp|lowestHP"
+  },
+  {
+    "id": "polish-001",
+    "task": "Add keyboard event listener in QueueBattleView for Q key to trigger auto-attack",
+    "stream": "polish",
+    "context_files": "QueueBattleView.tsx",
+    "verify_code": "keydown|KeyQ|key.*q"
+  }
+]

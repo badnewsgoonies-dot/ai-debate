@@ -1,0 +1,42 @@
+
+> vale-chronicles@0.1.0 dev /home/geni/Documents/vale-village
+> vite
+
+Port 5173 is in use, trying another one...
+Port 5174 is in use, trying another one...
+Port 5175 is in use, trying another one...
+Port 5176 is in use, trying another one...
+Port 5177 is in use, trying another one...
+Port 5178 is in use, trying another one...
+Port 5179 is in use, trying another one...
+
+  VITE v7.2.4  ready in 769 ms
+
+  ➜  Local:   http://localhost:5180/
+  ➜  Network: use --host to expose
+node:internal/fs/watchers:247
+    const error = new UVException({
+                  ^
+
+Error: ENOSPC: System limit for number of file watchers reached, watch '/home/geni/Documents/vale-village/docs/features'
+    at FSWatcher.<computed> (node:internal/fs/watchers:247:19)
+    at Object.watch (node:fs:2491:36)
+    at createFsWatchInstance (file:///home/geni/Documents/vale-village/node_modules/.pnpm/vite@7.2.4_@types+node@24.10.1_tsx@4.20.6/node_modules/vite/dist/node/chunks/config.js:13599:16)
+    at setFsWatchListener (file:///home/geni/Documents/vale-village/node_modules/.pnpm/vite@7.2.4_@types+node@24.10.1_tsx@4.20.6/node_modules/vite/dist/node/chunks/config.js:13641:14)
+    at NodeFsHandler$1._watchWithNodeFs (file:///home/geni/Documents/vale-village/node_modules/.pnpm/vite@7.2.4_@types+node@24.10.1_tsx@4.20.6/node_modules/vite/dist/node/chunks/config.js:13755:20)
+    at NodeFsHandler$1._handleDir (file:///home/geni/Documents/vale-village/node_modules/.pnpm/vite@7.2.4_@types+node@24.10.1_tsx@4.20.6/node_modules/vite/dist/node/chunks/config.js:13918:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NodeFsHandler$1._addToNodeFs (file:///home/geni/Documents/vale-village/node_modules/.pnpm/vite@7.2.4_@types+node@24.10.1_tsx@4.20.6/node_modules/vite/dist/node/chunks/config.js:13961:15)
+Emitted 'error' event on FSWatcher instance at:
+    at FSWatcher._handleError (file:///home/geni/Documents/vale-village/node_modules/.pnpm/vite@7.2.4_@types+node@24.10.1_tsx@4.20.6/node_modules/vite/dist/node/chunks/config.js:14774:148)
+    at NodeFsHandler$1._addToNodeFs (file:///home/geni/Documents/vale-village/node_modules/.pnpm/vite@7.2.4_@types+node@24.10.1_tsx@4.20.6/node_modules/vite/dist/node/chunks/config.js:13978:18)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  errno: -28,
+  syscall: 'watch',
+  code: 'ENOSPC',
+  path: '/home/geni/Documents/vale-village/docs/features',
+  filename: '/home/geni/Documents/vale-village/docs/features'
+}
+
+Node.js v20.19.5
+ ELIFECYCLE  Command failed with exit code 1.
