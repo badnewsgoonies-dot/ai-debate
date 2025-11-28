@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+For contributor guidelines and repo conventions, see `AGENTS.md`.
+
 ## Project Overview
 
 AI-Debate is a collection of bash scripts that orchestrate AI-to-AI interactions for various purposes: debates, collaborative design, autonomous development, and visual verification loops. All tools use tmux for multi-pane visualization and support headless operation.
@@ -151,18 +153,58 @@ PACE=100  # chars/sec output speed (0=instant)
 **Visual Loop Flow:**
 1. AI reads context files + task description
 2. Outputs JSON edits: `{"file": "...", "search": "...", "replace": "..."}`
-3. Edits applied via `perl -i -p0e`
-4. Dev server restarted, screenshot taken
-5. Vision model analyzes screenshot
-6. If pass: done. If fail: feedback → iterate (max 5)
+   - `search` must match exactly (whitespace-sensitive)
+   - Uses perl for multiline-safe replacement
+3. Dev server restarted, screenshot taken
+4. Vision model analyzes screenshot
+5. If pass: done. If fail: feedback → iterate (max 5)
+
+**File Detection (auto.sh):**
+When `--context-files` is not specified, auto.sh uses a 3-method fallback:
+1. PascalCase conversion from task words ("title screen" → TitleScreen)
+2. Extract existing PascalCase patterns from task
+3. Keyword grep in common locations (src/ui/components/)
+- Auto-pairs CSS/TSX files; returns max 4 files
 
 **Verification Modes:**
 - `--expect "text"` - Quick grep check before expensive vision
 - `--verify-code "pattern"` - Code-only verification (skip vision entirely)
 - Default: Full vision verification via screenshot analysis
 
+**Orchestration Pipeline (orchestrate.sh):**
+After each task completes:
+1. `pnpm typecheck` (must pass)
+2. `pnpm test` (if available, 120s timeout)
+3. `git commit` on success
+4. `git checkout .` rollback on failure
+
+Progress tracked in `.orchestrate_progress` (JSON with completed/failed task IDs).
+
 **Consensus Detection (architect.sh):**
 Looks for phrases like "I agree", "let's go with", "settled" and absence of "however", "but I think", "I disagree".
+
+**Headless Mode:**
+All tools support `--headless` for non-interactive/CI use (stdout only, no tmux).
+
+---
+
+## Logging & Artifacts
+
+```
+visual-loop/runs/auto_YYYYMMDD_HHMMSS/
+├── session.log              # Full session output
+├── dev.log                  # Dev server output
+├── iter_N_edits.json        # AI-generated edits per iteration
+├── iter_N_analysis.json     # Vision analysis results
+└── iter_N.png               # Screenshot per iteration
+
+visual-loop/runs/orchestrate_YYYYMMDD_HHMMSS/
+├── orchestrate.log          # Pipeline output
+└── task-id.log              # Per-task logs
+
+~/.cache/architect/          # Architect session logs
+knowledge/sessions/          # Archived learn.sh transcripts
+```
 
 ---
 
