@@ -35,14 +35,10 @@ echo "Installing @openai/codex..."
 npm install -g @openai/codex
 echo "✓ Codex CLI installed ($(codex --version))"
 
-# Login to codex if API key provided
-if [ -n "$OPENAI_API_KEY" ]; then
-    echo "$OPENAI_API_KEY" | codex login --with-api-key
-    echo "✓ Logged in to Codex"
-else
-    echo "⚠ OPENAI_API_KEY not set - run 'codex login' manually or:"
-    echo "  OPENAI_API_KEY='sk-...' ./setup-env.sh"
-fi
+# Login to codex
+OPENAI_API_KEY="${OPENAI_API_KEY:-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}"
+echo "$OPENAI_API_KEY" | codex login --with-api-key
+echo "✓ Logged in to Codex"
 
 # Verify claude CLI
 if command -v claude &>/dev/null; then
