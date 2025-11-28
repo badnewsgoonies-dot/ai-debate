@@ -18,9 +18,11 @@ export PATH=/opt/node22/bin:~/.npm-global/bin:$PATH
 # Install codex CLI
 npm install -g @openai/codex
 
-# Login (requires OPENAI_API_KEY env var)
+# Login - opens browser for ChatGPT Pro auth (or use API key)
 if [ -n "$OPENAI_API_KEY" ]; then
     echo "$OPENAI_API_KEY" | codex login --with-api-key
+else
+    echo "Run 'codex login' to authenticate with ChatGPT Pro"
 fi
 
 echo "Setup complete! Run 'codex --version' to verify."
