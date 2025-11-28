@@ -37,6 +37,18 @@ done
 
 [[ -n "$TASK" ]] || { echo "Usage: ./auto.sh \"task description\" [--context-files \"File.tsx,File.css\"] [--expect \"text\"] [--no-stash]"; exit 1; }
 
+# Validate dependencies
+if ! command -v codex &>/dev/null; then
+    echo "Error: 'codex' command not found."
+    echo "Install with: npm install -g @openai/codex"
+    exit 1
+fi
+if ! command -v jq &>/dev/null; then
+    echo "Error: 'jq' command not found."
+    echo "Install with: sudo apt install jq"
+    exit 1
+fi
+
 # Colors
 BOLD="\033[1m"
 DIM="\033[2m"
@@ -271,36 +283,70 @@ CRITICAL RULES:
     echo "$EDITS" > "$LOG_DIR/iter_${i}_edits.json"
 
     # Apply edits with validation
-    echo "$EDITS" | while IFS= read -r line; do
+    # NOTE: Using mapfile instead of pipe to avoid subshell variable scope loss
+    mapfile -t EDIT_LINES <<< "$EDITS"
+    for line in "${EDIT_LINES[@]}"; do
         [[ -z "$line" ]] && continue
         [[ "$line" != "{"* ]] && continue
 
-        FILE=$(echo "$line" | jq -r '.file // empty' 2>/dev/null)
-        SEARCH=$(echo "$line" | jq -r '.search // empty' 2>/dev/null)
-        REPLACE=$(echo "$line" | jq -r '.replace // empty' 2>/dev/null)
+        # Validate JSON structure before parsing
+        if ! echo "$line" | jq -e '.file and .search' >/dev/null 2>&1; then
+            log "${RED}⚠ Invalid JSON edit: ${line:0:50}...${RESET}"
+            ((iter_edits_failed++)) || true
+            continue
+        fi
+
+        FILE=$(echo "$line" | jq -r '.file')
+        SEARCH=$(echo "$line" | jq -r '.search')
+        REPLACE=$(echo "$line" | jq -r '.replace // ""')
 
         if [[ -n "$FILE" && -n "$SEARCH" ]]; then
             FULL_PATH="$PROJECT_DIR/$FILE"
-            if [[ -f "$FULL_PATH" ]]; then
-                # Count matches before edit
-                MATCH_COUNT=$(grep -cF "$SEARCH" "$FULL_PATH" 2>/dev/null || echo "0")
-
-                if [[ "$MATCH_COUNT" == "0" ]]; then
-                    log "${RED}⚠ No match found in $FILE${RESET}"
-                    ((iter_edits_failed++)) || true
-                    continue
-                elif [[ "$MATCH_COUNT" -gt "1" ]]; then
-                    log "${YELLOW}⚠ Multiple matches ($MATCH_COUNT) in $FILE - applying to first${RESET}"
-                fi
-
-                log "${DIM}Editing $FILE...${RESET}"
-                # Use perl for multiline replace (first match only)
-                perl -i -p0e "s/\Q$SEARCH\E/$REPLACE/s" "$FULL_PATH" 2>/dev/null || true
-                ((iter_edits_applied++)) || true
-            else
+            if [[ ! -f "$FULL_PATH" ]]; then
                 log "${RED}⚠ File not found: $FILE${RESET}"
                 ((iter_edits_failed++)) || true
+                continue
             fi
+            if [[ ! -r "$FULL_PATH" ]]; then
+                log "${RED}⚠ Cannot read file: $FILE (permission denied)${RESET}"
+                ((iter_edits_failed++)) || true
+                continue
+            fi
+
+            # Count matches before edit (use grep -c, handle multiline later)
+            MATCH_COUNT=$(grep -cF "$SEARCH" "$FULL_PATH" 2>/dev/null || echo "0")
+
+            if [[ "$MATCH_COUNT" == "0" ]]; then
+                log "${RED}⚠ No match found in $FILE${RESET}"
+                ((iter_edits_failed++)) || true
+                continue
+            elif [[ "$MATCH_COUNT" -gt "1" ]]; then
+                log "${YELLOW}⚠ Multiple matches ($MATCH_COUNT) in $FILE - applying to first${RESET}"
+            fi
+
+            log "${DIM}Editing $FILE...${RESET}"
+            # Use perl for multiline replace - escape REPLACE to prevent regex injection
+            # Write search/replace to temp files to avoid shell escaping issues
+            local tmp_search=$(mktemp)
+            local tmp_replace=$(mktemp)
+            printf '%s' "$SEARCH" > "$tmp_search"
+            printf '%s' "$REPLACE" > "$tmp_replace"
+
+            if perl -i -p0e '
+                BEGIN {
+                    local $/;
+                    open(S, "<", $ARGV[0]) or die; $search = <S>; close S;
+                    open(R, "<", $ARGV[1]) or die; $replace = <R>; close R;
+                    shift @ARGV; shift @ARGV;
+                }
+                s/\Q$search\E/$replace/s;
+            ' "$tmp_search" "$tmp_replace" "$FULL_PATH" 2>/dev/null; then
+                ((iter_edits_applied++)) || true
+            else
+                log "${RED}⚠ Perl substitution failed in $FILE${RESET}"
+                ((iter_edits_failed++)) || true
+            fi
+            rm -f "$tmp_search" "$tmp_replace"
         fi
     done
 

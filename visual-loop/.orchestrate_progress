@@ -1,7 +1,9 @@
 {"completed": [
-  "battle-001",
-  "battle-002",
-  "battle-003",
-  "core-001",
-  "polish-001"
-], "failed": []}
+  "title-001",
+  "title-002",
+  "battle-001"
+], "failed": [
+  "title-001",
+  "title-002",
+  "battle-001"
+]}

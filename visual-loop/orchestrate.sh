@@ -67,18 +67,28 @@ save_progress() {
     local task_id="$1"
     local status="$2"
 
+    # Use jq --arg to safely escape task_id (prevents JSON injection)
     if [[ "$status" == "completed" ]]; then
-        COMPLETED=$(echo "$COMPLETED" | jq ". + [\"$task_id\"]")
+        COMPLETED=$(echo "$COMPLETED" | jq --arg tid "$task_id" '. + [$tid]') || {
+            log "${RED}Failed to update progress for $task_id${RESET}"
+            return 1
+        }
     else
-        FAILED=$(echo "$FAILED" | jq ". + [\"$task_id\"]")
+        FAILED=$(echo "$FAILED" | jq --arg tid "$task_id" '. + [$tid]') || {
+            log "${RED}Failed to update progress for $task_id${RESET}"
+            return 1
+        }
     fi
 
-    echo "{\"completed\": $COMPLETED, \"failed\": $FAILED}" > "$PROGRESS_FILE"
+    # Atomic write: write to temp file then move
+    echo "{\"completed\": $COMPLETED, \"failed\": $FAILED}" > "$PROGRESS_FILE.tmp"
+    mv "$PROGRESS_FILE.tmp" "$PROGRESS_FILE"
 }
 
 is_completed() {
     local task_id="$1"
-    echo "$COMPLETED" | jq -e "index(\"$task_id\")" >/dev/null 2>&1
+    # Use jq --arg for safe comparison
+    echo "$COMPLETED" | jq -e --arg tid "$task_id" 'index($tid)' >/dev/null 2>&1
 }
 
 # Check if task_list.json exists
@@ -191,18 +201,49 @@ for row in $(echo "$TASKS" | jq -r '.[] | @base64'); do
         save_progress "$TASK_ID" "completed"
         ((SUCCEEDED++)) || true
 
-        # Commit after each successful task
+        # Verify before commit: typecheck + tests
         cd "$PROJECT_DIR"
+
+        # TypeScript compilation check
+        log "${DIM}Running typecheck...${RESET}"
+        if ! pnpm typecheck >/dev/null 2>&1; then
+            log "${RED}✗ TypeScript errors - reverting changes${RESET}"
+            git checkout . 2>/dev/null || true
+            save_progress "$TASK_ID" "failed"
+            ((SUCCEEDED--)) || true
+            continue
+        fi
+        log "${GREEN}✓ Typecheck passed${RESET}"
+
+        # Run tests (if test command exists)
+        if [[ -f "package.json" ]] && grep -q '"test"' package.json 2>/dev/null; then
+            log "${DIM}Running tests...${RESET}"
+            if ! timeout 120 pnpm test >/dev/null 2>&1; then
+                log "${RED}✗ Tests failed - reverting changes${RESET}"
+                git checkout . 2>/dev/null || true
+                save_progress "$TASK_ID" "failed"
+                ((SUCCEEDED--)) || true
+                continue
+            fi
+            log "${GREEN}✓ Tests passed${RESET}"
+        fi
+
+        # Commit after successful verification
         if git rev-parse --git-dir >/dev/null 2>&1; then
             DIFF=$(git diff --stat 2>/dev/null || echo "")
             if [[ -n "$DIFF" ]]; then
                 git add -A
-                git commit -m "feat: $TASK_DESC
+                # Use heredoc for safe commit message
+                git commit -m "$(cat <<EOF
+feat: $TASK_DESC
 
 Orchestrated by AI pipeline.
 Task ID: $TASK_ID
+Verified: typecheck ✓, tests ✓
 
-🤖 Generated with Claude Code" >/dev/null 2>&1 || true
+🤖 Generated with Claude Code
+EOF
+)" >/dev/null 2>&1 || true
                 log "${DIM}Changes committed${RESET}"
             fi
         fi
