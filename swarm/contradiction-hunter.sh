@@ -18,6 +18,7 @@ CODEX_MODEL="${CODEX_MODEL:-gpt-5.1-codex-max}"
 BRAIN_EFFORT="${BRAIN_EFFORT:-xhigh}"
 DRONE_EFFORT="${DRONE_EFFORT:-low}"
 REVIEWER_CMD="${REVIEWER_CMD:-claude -p}"
+GUARDIAN_CMD="${GUARDIAN_CMD:-$SCRIPT_DIR/../guardian/guardian.sh --audit}"
 TIMEOUT_SECS="${TIMEOUT_SECS:-10}"
 DRY_RUN="${DRY_RUN:-0}"
 
@@ -189,6 +190,12 @@ review_anomalies() {
     if [[ ! -s "$anomaly_file" ]]; then
         log "No anomalies to review."
         return
+    fi
+
+    if [[ -x "${GUARDIAN_CMD%% *}" ]]; then
+        log "Guardian audit on anomalies..."
+        guardian_out=$($GUARDIAN_CMD "$(cat "$anomaly_file")" 2>&1 || true)
+        echo "$guardian_out" > "$LOG_DIR/guardian.txt"
     fi
 
     if command -v ${REVIEWER_CMD%% *} >/dev/null 2>&1; then
