@@ -15,19 +15,45 @@ RESEARCH_FILE="${1:-}"
 NUM_ITERATORS="${2:-${NUM_ITERATORS:-2}}"
 MAX_EXPERIMENTS="${3:-${MAX_EXPERIMENTS:-10}}"
 CODEX_MODEL="${CODEX_MODEL:-gpt-5.1-codex-max}"
-CODEX_EFFORT="${CODEX_EFFORT:-xhigh}"
+BRAIN_EFFORT="${BRAIN_EFFORT:-xhigh}"
+DRONE_EFFORT="${DRONE_EFFORT:-low}"
 REVIEWER_CMD="${REVIEWER_CMD:-claude -p}"
 TIMEOUT_SECS="${TIMEOUT_SECS:-10}"
 DRY_RUN="${DRY_RUN:-0}"
 
 SCRIPT_NAME="contradiction-hunter"
 WORK_DIR=""
+PYTHON_BIN=""
+
+# Detect python interpreter (python3 preferred, fallback to python)
+detect_python() {
+    if command -v python3 >/dev/null 2>&1; then
+        PYTHON_BIN="python3"
+    elif command -v python >/dev/null 2>&1; then
+        PYTHON_BIN="python"
+    else
+        log "WARNING: No python or python3 found. Python experiments will fail."
+        PYTHON_BIN="python"  # Will error but at least shows clear message
+    fi
+    log "Python interpreter: $PYTHON_BIN"
+}
+
+# Normalize code to use detected python interpreter
+normalize_python_code() {
+    local code="$1"
+    # Replace 'python -' and 'python <<' with detected interpreter
+    # Handle both start of string and after newlines
+    code="${code//python -/$PYTHON_BIN -}"
+    code="${code//python <</$PYTHON_BIN <<}"
+    echo "$code"
+}
 
 main() {
     require_cmd codex
     require_cmd jq
     require_cmd timeout
     require_cmd sha1sum
+    detect_python
 
     if [[ -z "$RESEARCH_FILE" || ! -f "$RESEARCH_FILE" ]]; then
         echo "Usage: $0 <research_file> [num_iterators] [max_experiments]" >&2
@@ -42,6 +68,7 @@ main() {
     log "Research: $RESEARCH_FILE"
     log "Iterators: $NUM_ITERATORS | Max experiments: $MAX_EXPERIMENTS"
     log "Dry run: $DRY_RUN"
+    log "Codex effort (brain/drone): $BRAIN_EFFORT / $DRONE_EFFORT"
 
     mine_problems
     generate_experiments
@@ -53,9 +80,11 @@ main() {
 }
 
 codex_run() {
+    local effort="${1:-$BRAIN_EFFORT}"
+    shift || true
     codex exec --full-auto \
         -m "$CODEX_MODEL" \
-        -c reasoning.effort="$CODEX_EFFORT" \
+        -c model_reasoning_effort="$effort" \
         --sandbox danger-full-access \
         "$@"
 }
@@ -92,11 +121,7 @@ Problems:
 $(cat "$LOG_DIR/problems.json")
 EOF
 )
-    experiments=$(codex exec --full-auto \
-        -m gpt-5.1 \
-        -c reasoning.effort=high \
-        --sandbox danger-full-access \
-        "$prompt")
+    experiments=$(codex_run "$DRONE_EFFORT" "$prompt")
     echo "$experiments" > "$LOG_DIR/experiments.json"
     log "Experiments saved to $LOG_DIR/experiments.json"
     validate_json_file "$LOG_DIR/experiments.json"
@@ -122,12 +147,15 @@ run_iterators() {
                 expected=$(echo "$exp_line" | jq -r '.expected')
                 code_hash=$(printf '%s' "$code" | sha1sum | awk '{print $1}')
 
-                if is_unsafe_code "$code"; then
+                # Normalize python -> python3 if needed
+                normalized_code=$(normalize_python_code "$code")
+
+                if is_unsafe_code "$normalized_code"; then
                     result="SKIPPED_UNSAFE"
                 elif [[ "$DRY_RUN" -eq 1 ]]; then
-                    result="DRY_RUN: $code"
+                    result="DRY_RUN: $normalized_code"
                 else
-                    result=$(cd "$WORK_DIR" && timeout "$TIMEOUT_SECS" bash -lc "$code" 2>&1 || true)
+                    result=$(cd "$WORK_DIR" && timeout "$TIMEOUT_SECS" bash -lc "$normalized_code" 2>&1 || true)
                 fi
 
                 write_jsonl "$(jq -nc --arg name "$name" --arg expected "$expected" --arg actual "$result" --arg hash "$code_hash" \
