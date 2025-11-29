@@ -1,0 +1,43 @@
+## External Dependencies Analysis
+
+### System Tools (Required)
+| Tool | Purpose |
+|------|---------|
+| `tmux` | Multi-pane terminal UI for live visualization |
+| `jq` | JSON parsing throughout all scripts |
+| `bc` | Arithmetic calculations (delay timing) |
+| `pv` | Pipe viewer for streaming output (optional) |
+| `chromium` / `google-chrome` | Headless screenshots in `snap.sh` |
+| `perl` | Multiline-safe search/replace in `auto.sh` |
+| `git` | Version control, stashing, checkpoints |
+
+### AI CLI Tools (Required)
+| Tool | Install | Purpose |
+|------|---------|---------|
+| `claude` | Anthropic CLI | Primary AI for prompting (`claude -p`) |
+| `codex` | `npm install -g @openai/codex` | OpenAI Codex for code gen + vision (`codex exec -i`) |
+
+### Key Integrations
+
+1. **Claude CLI** (`claude -p "prompt"`)
+   - Used in debates, architect sessions, autopilot
+   - Configurable per-tool via `config.env`
+
+2. **OpenAI Codex** (`codex exec`)
+   - Code generation and execution
+   - Vision capability for screenshot analysis (`codex exec -i image.png`)
+   - Requires `OPENAI_API_KEY` authentication
+
+3. **Headless Chrome**
+   - Screenshots of running web apps
+   - Supports localhost dev servers (default: `http://localhost:5173`)
+
+4. **Project Build Tools** (expected in target projects)
+   - `pnpm dev` - Dev server
+   - `pnpm typecheck` - TypeScript validation
+   - `pnpm test` - Test runner
+
+### No Package Manager Dependencies
+- Pure bash scripts, no `package.json`
+- AI CLIs installed globally via npm
+- System tools via apt/package manager

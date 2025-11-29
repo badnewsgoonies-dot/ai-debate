@@ -1,0 +1,60 @@
+# Unified Codebase Analysis Summary
+
+## Overview
+
+**AI-Debate** is a collection of pure bash scripts that orchestrate AI-to-AI interactions for debates, collaborative design, autonomous development, and visual verification loops.
+
+## Key Findings
+
+### Structure (Partial - Agent Failed)
+The STRUCTURE agent encountered an error due to an invalid model configuration (`gpt-5.1-codex-max` does not exist). Based on CLAUDE.md documentation:
+
+**Main Directories:**
+| Directory | Purpose |
+|-----------|---------|
+| `visual-loop/` | Autonomous visual development (edit → screenshot → verify) |
+| `architect/` | Collaborative AI design sessions |
+| `debate/` | Adversarial AI debates (FOR vs AGAINST) |
+| `autopilot/` | User/Developer simulation |
+| `guardian/` | Rule enforcement and violation blocking |
+| `knowledge/` | Accumulated learnings and session transcripts |
+
+**Entry Points:**
+- `visual-loop/auto.sh` - Main visual dev loop
+- `visual-loop/orchestrate.sh` - Task pipeline runner
+- `architect/architect.sh` - Design collaboration
+- `debate/debate.sh` - Debate orchestration
+- `learn.sh` - Knowledge accumulation
+
+### Dependencies ✓
+All system and AI CLI dependencies documented:
+- **System:** tmux, jq, bc, pv, chromium/chrome, perl, git
+- **AI CLIs:** `claude` (Anthropic), `codex` (OpenAI with vision)
+- No package.json - pure bash implementation
+
+### Quality (Agent Failed)
+The QUALITY agent also failed with the same model access error.
+
+---
+
+## Critical Issues
+
+1. **Codex Model Misconfiguration**: The model `gpt-5.1-codex-max` doesn't exist or isn't accessible. This affects any `codex exec` commands in the toolchain.
+
+2. **Untracked Directory**: Git status shows `swarm/` is untracked - should be committed or added to `.gitignore`.
+
+---
+
+## Recommendations
+
+1. **Fix Codex Configuration**: Update to a valid model (e.g., `gpt-4o`, `gpt-4-turbo`, or check OpenAI API access for correct model IDs)
+
+2. **Resolve Untracked Files**: Either commit `swarm/` or add it to `.gitignore`
+
+3. **Add Fallback Handling**: Scripts should gracefully handle AI CLI failures with meaningful error messages
+
+4. **Run Manual Quality Check**: Since the agent failed, manually verify:
+   ```bash
+   # Check for syntax errors in bash scripts
+   shellcheck visual-loop/*.sh architect/*.sh debate/*.sh
+   ```

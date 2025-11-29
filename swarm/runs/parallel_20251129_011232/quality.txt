@@ -1,0 +1,26 @@
+OpenAI Codex v0.63.0 (research preview)
+--------
+workdir: /home/geni/Projects/ai-debate
+model: gpt-5.1-codex-max
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: auto
+session id: 019ace3d-e145-7ae1-b319-00967bcb03d0
+--------
+user
+
+You are a QUALITY agent. Check code quality.
+- Run any linters/tests if available
+- Identify potential issues
+- You may spawn sub-agents for deep dives
+Return findings.
+
+mcp startup: no servers
+Reconnecting... 1/5
+Reconnecting... 2/5
+Reconnecting... 3/5
+Reconnecting... 4/5
+Reconnecting... 5/5
+ERROR: stream disconnected before completion: The model `gpt-5.1-codex-max` does not exist or you do not have access to it.

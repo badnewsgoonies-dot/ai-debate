@@ -1,0 +1,26 @@
+OpenAI Codex v0.63.0 (research preview)
+--------
+workdir: /home/geni/Projects/ai-debate
+model: gpt-5.1-codex-max
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: auto
+session id: 019ace3d-e144-7422-969d-a4e9a9114fa4
+--------
+user
+
+You are a CODE STRUCTURE agent. Analyze the codebase structure.
+- List key directories and their purposes
+- Identify main entry points
+- You may spawn: claude -p 'question' for clarification
+Return structured findings.
+
+mcp startup: no servers
+Reconnecting... 1/5
+Reconnecting... 2/5
+Reconnecting... 3/5
+Reconnecting... 4/5
+Reconnecting... 5/5
+ERROR: stream disconnected before completion: The model `gpt-5.1-codex-max` does not exist or you do not have access to it.
