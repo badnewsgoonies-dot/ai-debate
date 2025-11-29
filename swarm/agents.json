@@ -1,0 +1,43 @@
+{
+  "agents": {
+    "brain": {
+      "command": "codex exec --full-auto -m gpt-5.1-codex-max",
+      "effort": "xhigh",
+      "sandbox": "danger-full-access",
+      "role": "orchestrator",
+      "can_spawn": ["senior", "claude-advisor"],
+      "timeout": 180
+    },
+    "senior": {
+      "command": "codex exec --full-auto -m gpt-5.1-codex-max",
+      "effort": "medium",
+      "sandbox": "danger-full-access",
+      "role": "coordinator",
+      "can_spawn": ["worker"],
+      "timeout": 60
+    },
+    "worker": {
+      "command": "codex exec --full-auto -m gpt-5.1-codex-max",
+      "effort": "low",
+      "sandbox": "workspace-write",
+      "role": "executor",
+      "can_spawn": [],
+      "timeout": 30
+    },
+    "claude-advisor": {
+      "command": "claude -p",
+      "role": "reviewer",
+      "can_spawn": [],
+      "timeout": 60
+    }
+  },
+  "tiers": {
+    "1": { "agent": "brain", "count": 1 },
+    "2": { "agent": "senior", "count_per_parent": 3 },
+    "3": { "agent": "worker", "count_per_parent": 3 }
+  },
+  "defaults": {
+    "max_concurrent": 12,
+    "stagger_delay_ms": 500
+  }
+}
