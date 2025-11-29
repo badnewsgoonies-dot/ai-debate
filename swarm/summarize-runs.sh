@@ -69,6 +69,15 @@ for dir in $(find "$ROOT" -maxdepth 1 -mindepth 1 -type d | sort); do
                 tail -n 12 "$dir/reflexion.log"
             fi
             ;;
+        multi_brain_*)
+            if ls "$dir"/out/brain*_final.txt >/dev/null 2>&1; then
+                echo "-- brains --"
+                for f in "$dir"/out/brain*_final.txt; do
+                    echo "[$(basename "$f")]"
+                    sed -n '1,12p' "$f"
+                done
+            fi
+            ;;
         hybrid_*|parallel_*)
             if [[ -f "$dir/final.txt" ]]; then
                 echo "-- final --"

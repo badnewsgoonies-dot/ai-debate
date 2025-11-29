@@ -99,23 +99,40 @@ Break down the task, delegate to agents, synthesize their outputs into a final r
     elif [[ "$ORCHESTRATOR" == "claude" ]]; then
         log "[SCRIPT-BASED ORCHESTRATION]"
 
-        log "[1/2] Copilot..."
+        log "[1/3] Copilot draft..."
         local copilot_out
         copilot_out=$(call_copilot "Suggest approach for: $TASK") || copilot_out="(failed)"
 
-        log "[2/2] Codex..."
-        local codex_out
-        codex_out=$(call_codex "Task: $TASK
-Copilot suggested: $copilot_out
-Implement or refine.") || codex_out="(failed)"
+        log "[2/3] Codex draft..."
+        local codex_out_a
+        codex_out_a=$(call_codex "Draft a solution for: $TASK
+Use copilot's hint if helpful: $copilot_out") || codex_out_a="(failed)"
+
+        log "[3/3] Claude vote/merge..."
+        local claude_vote
+        claude_vote=$(call_claude "You are reviewing two drafts for the same task.
+
+TASK:
+$TASK
+
+DRAFT A (codex):
+$codex_out_a
+
+DRAFT B (copilot suggestion):
+$copilot_out
+
+Pick the better draft or merge them. Return a concise final answer.") || claude_vote="(failed)"
 
         echo ""
         log "=== RESULTS ==="
         echo "--- Copilot ---"
         echo "$copilot_out"
         echo ""
-        echo "--- Codex ---"
-        echo "$codex_out"
+        echo "--- Codex Draft ---"
+        echo "$codex_out_a"
+        echo ""
+        echo "--- Claude Decision ---"
+        echo "$claude_vote"
     else
         echo "Unknown orchestrator: $ORCHESTRATOR (use codex or claude)" >&2
         exit 1
