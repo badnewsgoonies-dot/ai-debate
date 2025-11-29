@@ -69,8 +69,8 @@ run_brain() {
     while [[ $idx -le $BRAIN_COUNT ]]; do
         local plan="$LOG_DIR/subplans/brain${idx}_subplans.json"
         # Stub subplans: create seniors_per_brain entries
-        jq -n --arg task "$TASK" --argjson seniors $SENIORS_PER_BRAIN \
-            '{task:$task, seniors:[range(0;$seniors)|{id:.+1, plan:("Subplan " + (.+1|tostring)), depends_on:[]}]}'> "$plan"
+        jq -n --arg task "$TASK" --argjson seniors "$SENIORS_PER_BRAIN" \
+            '{task:$task, seniors:[range(0;$seniors)|{id:(. + 1), plan:("Subplan " + ((. + 1)|tostring)), depends_on:[]}]}' > "$plan"
         log_info "brain_subplans_written file=$plan"
         idx=$((idx+1))
     done
@@ -88,8 +88,8 @@ run_seniors() {
             sid="$(jq -r '.id' <<<"$senior")"
             local worker_tasks="$LOG_DIR/workers/brain${brain_id}_senior${sid}_tasks.json"
             # Stub worker tasks
-            jq -n --argjson workers $WORKERS_PER_SENIOR \
-                '{workers:[range(0;$workers)|{id:.+1, task:"Worker task " + (.+1|tostring)}]}' > "$worker_tasks"
+            jq -n --argjson workers "$WORKERS_PER_SENIOR" \
+                '{workers:[range(0;$workers)|{id:(. + 1), task:("Worker task " + ((. + 1)|tostring))}]}' > "$worker_tasks"
             progress_update "brain${brain_id}_senior${sid}" "running" "tasks_prepared"
         done
     done

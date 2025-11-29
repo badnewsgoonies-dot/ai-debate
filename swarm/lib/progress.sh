@@ -4,9 +4,11 @@
 
 set -euo pipefail
 
-PROGRESS_FILE="${PROGRESS_FILE:-$LOG_DIR/progress.json}"
+# PROGRESS_FILE is set lazily in progress_init() to allow LOG_DIR to be set first
+PROGRESS_FILE="${PROGRESS_FILE:-}"
 
 progress_init() {
+    PROGRESS_FILE="${PROGRESS_FILE:-${LOG_DIR:-/tmp}/progress.json}"
     echo '{"tasks":{}}' > "$PROGRESS_FILE"
 }
 

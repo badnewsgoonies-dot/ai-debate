@@ -10,14 +10,17 @@ preflight_check() {
         if ! command -v "$cmd" >/dev/null 2>&1; then
             echo "Missing command: $cmd" >&2
             fail=1
-        }
-    done
-    for envvar in "${REQUIRED_ENV[@]:-}"; do
-        if [[ -z "${!envvar:-}" ]]; then
-            echo "Missing env: $envvar" >&2
-            fail=1
         fi
     done
+    if [[ -n "${REQUIRED_ENV[*]:-}" ]]; then
+        for envvar in "${REQUIRED_ENV[@]}"; do
+            [[ -z "$envvar" ]] && continue
+            if [[ -z "${!envvar:-}" ]]; then
+                echo "Missing env: $envvar" >&2
+                fail=1
+            fi
+        done
+    fi
     if [[ $fail -ne 0 ]]; then
         exit 1
     fi
