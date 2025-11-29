@@ -32,7 +32,7 @@ YOUR TASK: $TASK
 
 # Launch primary research agent with Codex (has --full-auto for spawning)
 echo "[SWARM] Launching primary agent..."
-codex exec --full-auto -m o4-mini "
+codex exec --full-auto -m gpt-5.1-codex-max -c reasoning.effort=xhigh --sandbox danger-full-access "
 $SWARM_PROMPT
 
 DEPTH=1

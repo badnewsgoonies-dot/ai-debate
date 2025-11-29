@@ -14,7 +14,7 @@ echo ""
 echo "[DISPATCH] Spawning specialist agents..."
 
 # Agent 1: Code Structure Analyst (uses Codex for code reading)
-codex exec --full-auto -m o4-mini "
+codex exec --full-auto -m gpt-5.1-codex-max -c reasoning.effort=xhigh --sandbox danger-full-access "
 You are a CODE STRUCTURE agent. Analyze the codebase structure.
 - List key directories and their purposes
 - Identify main entry points
@@ -33,7 +33,7 @@ Be concise.
 PID2=$!
 
 # Agent 3: Test/Quality Analyst (uses Codex for running things)
-codex exec --full-auto -m o4-mini "
+codex exec --full-auto -m gpt-5.1-codex-max -c reasoning.effort=xhigh --sandbox danger-full-access "
 You are a QUALITY agent. Check code quality.
 - Run any linters/tests if available
 - Identify potential issues
