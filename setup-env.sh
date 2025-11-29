@@ -36,7 +36,7 @@ npm install -g @openai/codex
 echo "✓ Codex CLI installed ($(codex --version))"
 
 # Login to codex
-OPENAI_API_KEY="${OPENAI_API_KEY:-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}"
+OPENAI_API_KEY="${OPENAI_API_KEY:-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}"
 echo "$OPENAI_API_KEY" | codex login --with-api-key
 echo "✓ Logged in to Codex"
 
