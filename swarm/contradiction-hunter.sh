@@ -80,13 +80,20 @@ main() {
 }
 
 codex_run() {
-    local effort="${1:-$BRAIN_EFFORT}"
-    shift || true
+    local effort prompt
+    if [[ $# -ge 2 ]]; then
+        effort="$1"
+        shift
+        prompt="$*"
+    else
+        effort="$BRAIN_EFFORT"
+        prompt="$1"
+    fi
     codex exec --full-auto \
         -m "$CODEX_MODEL" \
         -c model_reasoning_effort="$effort" \
         --sandbox danger-full-access \
-        "$@"
+        "$prompt"
 }
 
 mine_problems() {
@@ -226,7 +233,8 @@ write_meta() {
   "num_iterators": $NUM_ITERATORS,
   "max_experiments": $MAX_EXPERIMENTS,
   "codex_model": "$CODEX_MODEL",
-  "codex_effort": "$CODEX_EFFORT",
+  "codex_effort_brain": "$BRAIN_EFFORT",
+  "codex_effort_drone": "$DRONE_EFFORT",
   "timeout_secs": $TIMEOUT_SECS,
   "dry_run": $DRY_RUN
 }

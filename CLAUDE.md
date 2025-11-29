@@ -14,6 +14,7 @@ AI-Debate is a collection of bash scripts that orchestrate AI-to-AI interactions
 - `claude -p "prompt"` - Claude CLI for prompting
 - `codex exec` - OpenAI Codex for code generation
 - `codex exec -i image.png` - Codex with vision for screenshot analysis
+- `copilot -p "prompt"` - GitHub Copilot CLI (GPT-5.1 backend)
 
 ---
 
@@ -53,6 +54,23 @@ cd architect
 # Knowledge accumulation loop
 ./learn.sh "How should error boundaries work?"
 ./learn.sh --review  # View accumulated insights
+```
+
+### Multi-Agent Swarm
+```bash
+cd swarm
+
+# 3-agent orchestrator (Claude + Codex + Copilot)
+./multi-agent.sh "Implement error handling for the API"
+./multi-agent.sh --orchestrator claude "Design caching strategy"
+
+# Contradiction hunter - probe impossible problems with experiments
+./contradiction-hunter.sh research.txt 2 10
+DRY_RUN=1 ./contradiction-hunter.sh research.txt  # Preview experiments
+
+# Self-improvement loops
+./reflexion.sh "Solve this coding challenge"
+./prompt-evolver.sh initial-prompt.txt 5         # 5 generations
 ```
 
 ### Other Tools
@@ -100,6 +118,14 @@ ai-debate/
 ├── knowledge/            # Accumulated learnings
 │   ├── learnings.md      # Extracted insights
 │   └── sessions/         # Full transcripts
+│
+├── swarm/                # Multi-agent orchestration & self-improvement
+│   ├── multi-agent.sh    # 3-agent orchestrator (Claude+Codex+Copilot)
+│   ├── contradiction-hunter.sh  # Probe impossible problems
+│   ├── reflexion.sh      # Self-reflection improvement loop
+│   ├── prompt-evolver.sh # Evolutionary prompt optimization
+│   ├── lib/common.sh     # Shared logging/validation helpers
+│   └── runs/             # Session logs and artifacts
 │
 └── learn.sh              # Runs architect + extracts insights
 ```
@@ -186,6 +212,21 @@ Looks for phrases like "I agree", "let's go with", "settled" and absence of "how
 **Headless Mode:**
 All tools support `--headless` for non-interactive/CI use (stdout only, no tmux).
 
+**Multi-Agent Orchestration (swarm/):**
+- `multi-agent.sh` supports two modes: `codex` (Codex leads, calls Claude+Copilot) or `claude` (script-based sequential)
+- Agent-calling-agent requires `--sandbox danger-full-access` for Codex to spawn Claude
+- Environment vars: `SAFE_MODE=1` forces workspace-write sandbox, `ALLOW_DANGER=1` enables danger-full-access
+- Falls back from codex to claude orchestrator on failure
+
+**Contradiction Hunter Flow:**
+1. Mine "impossible" problems from research text via Codex
+2. Generate small experiments (≤10s each) to probe assumptions
+3. Run experiments in parallel with multiple iterators
+4. Flag anomalies (expected ≠ actual, errors, timeouts)
+5. Review anomalies via Claude for insights
+
+Environment vars: `DRY_RUN=1` (preview), `CODEX_MODEL`, `CODEX_EFFORT`, `TIMEOUT_SECS`
+
 ---
 
 ## Logging & Artifacts
@@ -204,6 +245,17 @@ visual-loop/runs/orchestrate_YYYYMMDD_HHMMSS/
 
 ~/.cache/architect/          # Architect session logs
 knowledge/sessions/          # Archived learn.sh transcripts
+
+swarm/runs/<script>_YYYYMMDD_HHMMSS/
+├── session.log              # Full session output
+├── meta.json                # Run configuration snapshot
+├── problems.json            # Mined problems (contradiction-hunter)
+├── experiments.json         # Generated experiments
+├── experiments/             # Per-iterator results
+│   └── iterator_N.jsonl     # Experiment outcomes
+├── anomalies/flagged.jsonl  # Flagged anomalies
+├── insights.txt             # Claude's anomaly analysis
+└── work/                    # Isolated execution sandbox
 ```
 
 ---
@@ -215,4 +267,6 @@ knowledge/sessions/          # Archived learn.sh transcripts
 - `pv` - Pipe viewer for streaming output (optional)
 - `chromium` or `google-chrome` - Headless screenshots
 - `claude` CLI - Anthropic's Claude
-- `codex` CLI - OpenAI Codex
+- `codex` CLI - OpenAI Codex (gpt-5.1-codex-max for xhigh reasoning)
+- `copilot` CLI - GitHub Copilot
+- `sha1sum`, `timeout` - For experiment hashing and timeouts (swarm)

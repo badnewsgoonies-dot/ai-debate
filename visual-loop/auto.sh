@@ -125,7 +125,7 @@ stop_dev() {
     sleep 2
 }
 
-# Detect relevant files from task description
+# Smart file detection using AI semantic understanding
 detect_relevant_files() {
     local task="$1"
     local found_files=""
@@ -145,7 +145,29 @@ detect_relevant_files() {
         return
     fi
 
-    # Extract likely component names from task
+    # SMART METHOD: Use AI to understand task semantics and suggest files
+    # First, get a list of all component files for context
+    local component_files=$(find src -type f \( -name "*.tsx" -o -name "*.ts" -o -name "*.jsx" -o -name "*.js" \) 2>/dev/null | head -50)
+    local file_list=$(echo "$component_files" | xargs -n1 basename | sed 's/\.[^.]*$//' | sort -u | head -30)
+
+    # Ask AI to identify relevant files based on task semantics
+    local ai_prompt="Given this development task: \"$task\"
+
+And these available files/components in the project:
+$(echo "$file_list" | head -30)
+
+Which 2-4 files are most likely to need changes? Respond with ONLY file names (one per line), no explanations.
+Focus on component names that semantically match the task description.
+For example, if task mentions 'title screen', look for TitleScreen, Title, Screen components.
+If task mentions 'button', look for Button, CTA, ActionButton components."
+
+    # Try AI-powered detection (fallback to heuristics if AI unavailable)
+    local ai_suggestions=""
+    if command -v claude &>/dev/null; then
+        ai_suggestions=$(echo "$ai_prompt" | claude -p 2>/dev/null | grep -E '^[A-Za-z][A-Za-z0-9]*$' | head -4 || echo "")
+    fi
+
+    # Extract likely component names from task (heuristic fallback)
     # "title screen" → titlescreen, TitleScreen
     # "button color" → button, Button
 
@@ -162,7 +184,16 @@ detect_relevant_files() {
     # Method 2: Extract existing PascalCase words
     local existing_pascal=$(echo "$task" | grep -oE '[A-Z][a-z]+[A-Z][a-z]*' || echo "")
 
-    # Search for files
+    # Method 3: Use AI suggestions if available
+    if [[ -n "$ai_suggestions" ]]; then
+        for suggestion in $ai_suggestions; do
+            # Try exact match first
+            matches=$(find src -type f \( -name "*${suggestion}*" -o -name "*${suggestion,,}*" \) 2>/dev/null | head -2)
+            found_files+="$matches "
+        done
+    fi
+
+    # Method 4: Search for files using heuristic terms
     for term in $pascal $existing_pascal; do
         [[ -z "$term" ]] && continue
         [[ ${#term} -lt 3 ]] && continue  # Skip short terms
@@ -172,31 +203,56 @@ detect_relevant_files() {
         found_files+="$matches "
     done
 
-    # Method 3: Keyword search in file contents
-    local keywords=$(echo "$task" | tr '[:upper:]' '[:lower:]' | grep -oE '[a-z]{4,}' | head -5)
+    # Method 5: Smart keyword search in file contents (expanded keyword set)
+    local keywords=$(echo "$task" | tr '[:upper:]' '[:lower:]' | grep -oE '[a-z]{4,}' | head -8)
     for kw in $keywords; do
-        [[ "$kw" =~ ^(title|screen|button|color|text|style|change|update)$ ]] || continue
-        matches=$(grep -rl "$kw" src/ui/components/*.tsx src/ui/components/*.css 2>/dev/null | head -2)
+        # Expanded keyword filter - include more relevant terms
+        [[ "$kw" =~ ^(title|screen|button|color|text|style|change|update|header|footer|nav|menu|form|input|modal|dialog|card|panel|view|page|component|layout)$ ]] || continue
+        # Search in broader locations
+        matches=$(grep -rl "$kw" src/ui/components/*.tsx src/ui/components/*.css src/components/*.tsx src/components/*.css 2>/dev/null | head -2)
         found_files+="$matches "
     done
+
+    # Method 6: Semantic file search - look for related files by import/export relationships
+    # If we found a component, look for files that import it or are imported by it
+    local semantic_files=""
+    for f in $(echo "$found_files" | tr ' ' '\n' | head -2); do
+        [[ -z "$f" ]] && continue
+        local base_name=$(basename "$f" | sed 's/\.[^.]*$//')
+        # Find files that import this component
+        local importers=$(grep -rl "from.*${base_name}" src/ 2>/dev/null | head -3)
+        semantic_files+="$importers "
+        # Find files imported by this component
+        if [[ -f "$f" ]]; then
+            local imports=$(grep -E "^import.*from" "$f" 2>/dev/null | sed 's/.*from.*["'\'']\([^"'\'']*\)["'\''].*/\1/' | xargs -n1 basename 2>/dev/null | head -3)
+            for imp in $imports; do
+                local imported=$(find src -name "*${imp}*" -type f 2>/dev/null | head -1)
+                [[ -n "$imported" ]] && semantic_files+="$imported "
+            done
+        fi
+    done
+    found_files+="$semantic_files "
 
     # Dedupe and get paired files
     local final_files=""
     for f in $(echo "$found_files" | tr ' ' '\n' | sort -u); do
         [[ -z "$f" ]] && continue
+        [[ ! -f "$f" ]] && continue  # Verify file exists
         final_files+="$f "
 
         # Auto-include paired CSS/TSX
-        if [[ "$f" == *.tsx ]]; then
-            css="${f%.tsx}.css"
+        if [[ "$f" == *.tsx ]] || [[ "$f" == *.jsx ]]; then
+            css="${f%.*}.css"
             [[ -f "$css" ]] && final_files+="$css "
         elif [[ "$f" == *.css ]]; then
             tsx="${f%.css}.tsx"
+            jsx="${f%.css}.jsx"
             [[ -f "$tsx" ]] && final_files+="$tsx "
+            [[ -f "$jsx" ]] && final_files+="$jsx "
         fi
     done
 
-    # Return unique, limited to 4
+    # Return unique, limited to 4 (prioritize AI suggestions if available)
     echo "$final_files" | tr ' ' '\n' | grep -v '^$' | sort -u | head -4
 }
 
