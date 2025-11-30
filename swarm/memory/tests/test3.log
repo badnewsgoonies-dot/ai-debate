@@ -1,9 +1,1 @@
-PASS
-
-Run 1 choice: E5-large-v2 / E5/nomic/OpenAI (from anchors.jsonl)
-Run 2 choice: E5-large-v2 / E5/nomic/OpenAI (identical)
-Outputs identical: Yes
-E5 mentions in prompt: 4
-
-Both runs consistently inject the same embedding decisions from memory.
-The system is deterministic - prior decisions are reliably presented for reuse.
+PASS - First: E5-large-v2; Second: E5-large-v2; Stable reuse of prior decision

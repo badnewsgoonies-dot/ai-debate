@@ -1,20 +1,48 @@
-=== PROMPT (dry-run) ===
-# Memory Context
-## Recent Decisions
-- **memory**: Use mini-JSON over symbolic DSL for anchor storage → *mini-json*
-- **hierarchy**: Limit agent hierarchy to 2-3 hops maximum → *shallow*
-- **temporal**: Store timestamps separately, apply decay at query time → *query-time-decay*
-- **chunks**: Use 256-384 token chunks with 20-30% overlap → *320-64*
-- **temporal**: Encode time via sinusoidal embeddings + exponential decay at retrieval → *sinusoidal+decay*
-- **hierarchy**: Use 3-level hierarchy: 256-384 token leaves, 1k session summaries, 2k long-term summaries → *3-level*
-- **chunking**: 320 token chunks with 64 token overlap → *320/64*
-- **embeddings**: Use E5-large-v2 or nomic-embed-text locally, text-embedding-3-large for API → *E5/nomic/OpenAI*
-- **storage**: SQLite schema with id, parent_id, bucket, timestamp, embedding, text columns → *SQLite*
-- **retrieval**: Combine vector similarity with time decay: score = sim + β·exp(-Δt/τ) → *hybrid-scoring*
+Now I have a clear picture of the memory module. Here's a summary:
 
-## Open Questions
-- **embedding**: Which embedding model for local use?
----
+## Memory Module Overview
 
-Plan the next memory experiment
-========================
+The memory system consists of **3 main scripts** and supporting infrastructure:
+
+### Core Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `mem-search.sh` | Query anchors with filters (type, topic, date, text) |
+| `anchor-extract.sh` | Extract anchors from session logs via LLM |
+| `head-with-memory.sh` | Inject relevant memory context into prompts |
+| `temporal_decay.py` | Time-decay scoring: `exp(-age/τ)` with τ=7 days |
+
+### Data Storage
+
+- **`anchors.jsonl`** - Mini-JSON arrays: `[type, topic, text, choice, rationale, ts, session, source]`
+  - Types: `d` (decision), `q` (question), `a` (action), `f` (fact), `n` (note)
+  - 27 entries so far from research sessions
+
+### Directories (mostly empty, scaffolded)
+
+| Dir | Purpose |
+|-----|---------|
+| `sessions/` | Raw session logs |
+| `chunks/` | 320-token chunks with 64-token overlap (not yet implemented) |
+| `summaries/` | Compressed summaries (not yet implemented) |
+| `archive/` | Old/compressed data |
+| `tests/` | Test logs and outputs |
+
+### Key Decisions Recorded
+
+- **Storage**: SQLite schema planned (not yet built)
+- **Chunks**: 320 tokens / 64 overlap
+- **Embeddings**: E5-large-v2 for local, text-embedding-3-large for API
+- **Retrieval**: `score = similarity + β·exp(-Δt/τ)` hybrid scoring
+- **Hierarchy**: 3-level (leaf chunks → session summaries → long-term)
+
+### What's Missing
+
+1. **SQLite storage** - Currently just JSONL, no embeddings
+2. **Embedding pipeline** - No vector search yet
+3. **Chunk ingestor** - `chunks/` is empty
+4. **Summarizer** - `summaries/` is empty
+5. **Hybrid retrieval** - `mem-search.sh` only does exact filtering, no vector similarity
+
+What would you like me to work on?

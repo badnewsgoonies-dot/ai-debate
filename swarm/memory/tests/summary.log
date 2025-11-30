@@ -1,20 +1,5 @@
-================================================================================
-MEMORY SYSTEM TEST SUITE - SUMMARY
-================================================================================
-
-Test 1: PASS - Memory-aware planning: head-with-memory.sh injects decisions & open questions
-Test 2: PASS - Anchor extraction: anchor-extract.sh added 5 anchors from test log (19→24)
-Test 3: PASS - Reuse stability: Two identical runs produce identical memory context
-Test 4: PASS - Action status update: Append-based update works with latest-entry-wins logic
-Test 5: PASS - Parallel robustness: 4 concurrent mem-search queries completed without errors
-
-================================================================================
-OVERALL: 5/5 TESTS PASSED
-================================================================================
-
-TODOS for improvement:
-1. Add status= filter to mem-search.sh for action status queries
-2. Consider deduplication for action status (latest-entry-wins)
-3. head-with-memory.sh could be more explicit about when to reuse vs override decisions
-
-Run completed: 2025-11-29
+Test 1: PASS - head-with-memory surfaced prior memory decision (mini-JSON)
+Test 2: PASS - anchors count increased 26 -> 29 after extraction
+Test 3: PASS - consistent recommendation E5-large-v2 across runs
+Test 4: FAIL - mem-search ignores status; completed action still returned (add status filter)
+Test 5: PASS - parallel mem-search commands completed; total lines 20

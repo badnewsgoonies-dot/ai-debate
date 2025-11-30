@@ -1,13 +1,1 @@
-PASS
-
-Changed: "Test action for status update verification"
-Original status: pending (first entry)
-Updated status:  done (second entry, most recent)
-
-Verification method: grep for action text, take last entry, check status field.
-The test action was added with status "pending", then updated to "done".
-The most recent entry correctly shows "done" status.
-
-Note: mem-search.sh currently lacks a status= filter. For production use, consider:
-- Adding a status filter to mem-search.sh
-- Using latest-entry-wins deduplication for action status queries
+FAIL - mem-search ignores status and still lists completed action

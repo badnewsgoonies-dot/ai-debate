@@ -1,26 +1,24 @@
-=== PROMPT (dry-run) ===
-# Memory Context
-## Recent Decisions
-- **memory**: Use mini-JSON over symbolic DSL for anchor storage → *mini-json*
-- **hierarchy**: Limit agent hierarchy to 2-3 hops maximum → *shallow*
-- **temporal**: Store timestamps separately, apply decay at query time → *query-time-decay*
-- **chunks**: Use 256-384 token chunks with 20-30% overlap → *320-64*
-- **temporal**: Encode time via sinusoidal embeddings + exponential decay at retrieval → *sinusoidal+decay*
-- **hierarchy**: Use 3-level hierarchy: 256-384 token leaves, 1k session summaries, 2k long-term summaries → *3-level*
-- **chunking**: 320 token chunks with 64 token overlap → *320/64*
-- **embeddings**: Use E5-large-v2 or nomic-embed-text locally, text-embedding-3-large for API → *E5/nomic/OpenAI*
-- **storage**: SQLite schema with id, parent_id, bucket, timestamp, embedding, text columns → *SQLite*
-- **retrieval**: Combine vector similarity with time decay: score = sim + β·exp(-Δt/τ) → *hybrid-scoring*
-- **embeddings**: Use E5-large-v2 for local embeddings → *E5-large-v2*
+Based on the anchors file, here's the current state of **embedding decisions**:
 
-## Open Questions
-- **embedding**: Which embedding model for local use?
-- **architecture**: Is deeper hierarchy worth the complexity?
+## Decided
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Local embeddings | **E5-large-v2** | Best balance of quality and speed for batch processing |
+| API fallback | **text-embedding-3-large** | High-quality OpenAI option when local isn't feasible |
+| Alternative local | **nomic-embed-text-v1.5** | Good OSS option with similar quality |
 
-## Relevant Context
-- [d] **embeddings**: Use E5-large-v2 or nomic-embed-text locally, text-embedding-3-large for API
-- [d] **embeddings**: Use E5-large-v2 for local embeddings
----
+## Open Question
+The anchors still show an open question at line 9:
+> "Which embedding model for local use?"
 
-Pick an embedding model for local use
-========================
+However, this was subsequently **resolved** by later decisions (lines 15, 22, 29) all converging on **E5-large-v2**.
+
+## Implementation Notes
+- E5-large-v2 produces 1024-dim embeddings
+- Works well with the SQLite schema storing embeddings as BLOBs
+- Pairs with the hybrid scoring: `score = sim + β·exp(-Δt/τ)`
+
+Want me to:
+1. Look at the `temporal_decay.py` implementation?
+2. Help implement the embedding pipeline?
+3. Research alternatives like BGE or GTE models?

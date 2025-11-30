@@ -1,6 +1,1 @@
-PASS
-
-Reason: head-with-memory.sh successfully injects memory context:
-- 10 recent decisions shown (mini-json, shallow hierarchy, query-time-decay, etc.)
-- Open questions section includes the embedding model question
-- The planning prompt clearly receives this context before the user query
+PASS - head-with-memory used prior memory decisions

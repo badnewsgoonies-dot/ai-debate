@@ -1,17 +1,3 @@
-Memory System Test Session - 2025-11-29
-
-Session started at 14:00 UTC.
-
-After reviewing the existing memory architecture, we made several key decisions:
-
-1. Decided to use E5-large-v2 for local embeddings because it offers the best balance of quality and speed for our batch processing needs.
-
-2. Action: Build mem-search helper with filtering support for type, topic, and date ranges.
-
-3. Open question: Is deeper hierarchy worth the complexity? We need to evaluate if 4+ levels of summarization adds value or just introduces latency.
-
-4. Fact: We run on Ubuntu 22.04 with 32GB RAM and an RTX 4090, which allows for local embedding inference.
-
-5. Action: Implement temporal decay in retrieval scoring with configurable tau parameter.
-
-Session ended at 15:30 UTC.
+We decided to use E5-large-v2 locally for embeddings.
+Action: implement mem-search helper.
+Open question: is deeper hierarchy worth the complexity?

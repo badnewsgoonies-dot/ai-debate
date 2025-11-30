@@ -1,10 +1,1 @@
-PASS
-
-Parallel queries executed simultaneously:
-- t=d             -> 11 lines (all decisions)
-- t=f             -> 5 lines (all facts)
-- topic=memory    -> 2 lines (memory-related anchors)
-- topic=retrieval -> 2 lines (retrieval-related anchors)
-
-All 4 queries completed without errors, race conditions, or file corruption.
-Parallel read access to anchors.jsonl is safe.
+PASS - parallel mem-search completed; total lines: 20

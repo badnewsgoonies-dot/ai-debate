@@ -1,11 +1,1 @@
-PASS
-
-Lines before: 19
-Lines after:  24
-Difference:   5
-
-anchor-extract.sh successfully extracted 5 anchors:
-- 1 decision (E5-large-v2 for embeddings)
-- 2 actions (mem-search helper, temporal decay)
-- 1 question (hierarchy complexity)
-- 1 fact (system specs)
+PASS - anchors appended; before: 26 after: 29
