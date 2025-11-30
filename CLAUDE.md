@@ -64,9 +64,10 @@ cd swarm
 ./multi-agent.sh "Implement error handling for the API"
 ./multi-agent.sh --orchestrator claude "Design caching strategy"
 
-# Contradiction hunter - probe impossible problems with experiments
-./contradiction-hunter.sh research.txt 2 10
-DRY_RUN=1 ./contradiction-hunter.sh research.txt  # Preview experiments
+# Lyra - autonomous micro-lab for contradiction discovery
+./lyra.sh research.txt 2 10            # 2 iterators, 10 experiments
+DRY_RUN=1 ./lyra.sh research.txt       # Preview experiments
+# (alias: ./contradiction-hunter.sh still works)
 
 # Self-improvement loops
 ./reflexion.sh "Solve this coding challenge"
@@ -121,10 +122,11 @@ ai-debate/
 │
 ├── swarm/                # Multi-agent orchestration & self-improvement
 │   ├── multi-agent.sh    # 3-agent orchestrator (Claude+Codex+Copilot)
-│   ├── contradiction-hunter.sh  # Probe impossible problems
+│   ├── lyra.sh           # Autonomous micro-lab for contradiction discovery
 │   ├── reflexion.sh      # Self-reflection improvement loop
 │   ├── prompt-evolver.sh # Evolutionary prompt optimization
 │   ├── lib/common.sh     # Shared logging/validation helpers
+│   ├── lib/codex_auto.sh # Auto-effort Codex wrapper (brain/senior/worker/drone)
 │   └── runs/             # Session logs and artifacts
 │
 └── learn.sh              # Runs architect + extracts insights
@@ -218,14 +220,21 @@ All tools support `--headless` for non-interactive/CI use (stdout only, no tmux)
 - Environment vars: `SAFE_MODE=1` forces workspace-write sandbox, `ALLOW_DANGER=1` enables danger-full-access
 - Falls back from codex to claude orchestrator on failure
 
-**Contradiction Hunter Flow:**
-1. Mine "impossible" problems from research text via Codex
-2. Generate small experiments (≤10s each) to probe assumptions
+**Lyra Flow** (Autonomous Micro-Lab):
+1. Mine "impossible" problems from research text via Codex (brain effort)
+2. Generate small experiments (≤10s each) to probe assumptions (drone effort)
 3. Run experiments in parallel with multiple iterators
 4. Flag anomalies (expected ≠ actual, errors, timeouts)
 5. Review anomalies via Claude for insights
 
-Environment vars: `DRY_RUN=1` (preview), `CODEX_MODEL`, `CODEX_EFFORT`, `TIMEOUT_SECS`
+Environment vars: `DRY_RUN=1` (preview), `CODEX_MODEL`, `BRAIN_EFFORT`, `DRONE_EFFORT`, `TIMEOUT_SECS`
+
+**Codex Auto-Effort** (`lib/codex_auto.sh`):
+- `codex_brain` → xhigh effort (architecture, planning)
+- `codex_senior` → high effort (implementation, debugging)
+- `codex_worker` → medium effort (straightforward tasks)
+- `codex_drone` → low effort (simple execution)
+- `codex_auto` → auto-detect from prompt keywords + length
 
 ---
 
@@ -249,7 +258,7 @@ knowledge/sessions/          # Archived learn.sh transcripts
 swarm/runs/<script>_YYYYMMDD_HHMMSS/
 ├── session.log              # Full session output
 ├── meta.json                # Run configuration snapshot
-├── problems.json            # Mined problems (contradiction-hunter)
+├── problems.json            # Mined problems (lyra)
 ├── experiments.json         # Generated experiments
 ├── experiments/             # Per-iterator results
 │   └── iterator_N.jsonl     # Experiment outcomes
