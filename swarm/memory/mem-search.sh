@@ -13,6 +13,8 @@
 #   since=2025-11-25                      - Only entries after date
 #   until=2025-11-30                      - Only entries before date
 #   text=keyword                          - Search in text field
+#   status=pending|done                   - Filter by action/choice field
+#   choice=E5-large-v2                    - Filter by choice field
 #   limit=10                              - Max results (default: 20)
 #
 # Examples:
@@ -71,6 +73,14 @@ build_filter() {
                 ;;
             source)
                 filter="$filter and .[7] == \"$val\""
+                ;;
+            status)
+                # For actions, status is stored in the choice slot (index 3)
+                filter="$filter and .[3] == \"$val\""
+                ;;
+            choice)
+                # Choice/status share the same field (index 3)
+                filter="$filter and .[3] == \"$val\""
                 ;;
             since)
                 filter="$filter and .[5] >= \"${val}T00:00:00Z\""
